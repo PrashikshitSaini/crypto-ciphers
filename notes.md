@@ -174,3 +174,129 @@
 
 - **Goal**: Find short, nearly orthogonal vectors in a lattice.
 - **Knapsack Attack**: Reduces breaking Merkle-Hellman to polynomial time.
+
+### **5. RSA Cryptosystem: In-Depth Explanation**
+
+#### **1. The Factoring Problem**
+
+**Concept**:  
+RSA's security relies on the **factoring problem**: factoring a large composite number \( n \) into its prime factors \( p \) and \( q \) is computationally intractable. While multiplying \( p \) and \( q \) is easy, reversing the process (factoring \( n \)) is exponentially harder as \( n \) grows.
+
+**Why Factoring is Hard**:
+
+- **Best Algorithms**: The fastest known classical algorithm, the **General Number Field Sieve (GNFS)**, has sub-exponential complexity:  
+  \[
+  \mathcal{O}\left(\exp\left(\left(\sqrt[3]{\frac{64}{9}} + o(1)\right) (\ln n)^{1/3} (\ln \ln n)^{2/3}\right)\right)
+  \]
+  For a 2048-bit \( n \), this requires millions of years on classical computers.
+- **Quantum Threat**: Shor’s algorithm (quantum) factors \( n \) in polynomial time, but large-scale quantum computers don’t yet exist.
+
+**Example**:
+
+- Let \( n = 3233 \). Factoring it requires testing divisors until finding \( p = 61 \) and \( q = 53 \). For large \( n \) (e.g., 617 digits), this is infeasible.
+
+---
+
+#### **2. Modular Exponentiation in RSA**
+
+**Key Generation**:
+
+1. Choose primes \( p = 61 \), \( q = 53 \).
+2. Compute \( n = p \times q = 3233 \) and \( \phi(n) = (p-1)(q-1) = 3120 \).
+3. Choose \( e = 17 \) (public exponent) such that \( \gcd(e, \phi(n)) = 1 \).
+4. Compute \( d = e^{-1} \mod \phi(n) = 2753 \) (private exponent).
+
+**Encryption & Decryption**:
+
+- **Encrypt** plaintext \( m \) (e.g., \( m = 65 \)):  
+  \[
+  c = m^e \mod n = 65^{17} \mod 3233 = 2790
+  \]
+- **Decrypt** ciphertext \( c \):  
+  \[
+  m = c^d \mod n = 2790^{2753} \mod 3233 = 65
+  \]
+
+**Mathematical Foundation**:
+
+- **Euler’s Theorem**: If \( \gcd(m, n) = 1 \), \( m^{\phi(n)} \equiv 1 \mod n \).
+- **Decryption Works Because**:  
+  \[
+  c^d \mod n = (m^e)^d \mod n = m^{ed} \mod n = m^{1 + k\phi(n)} \mod n = m \mod n
+  \]  
+  (since \( ed \equiv 1 \mod \phi(n) \)).
+
+---
+
+#### **3. Repeated Squaring for Efficient Exponentiation**
+
+**Problem**: Directly computing \( m^e \mod n \) for large \( e \) (e.g., \( 2^{1024} \)) is computationally infeasible.
+
+**Solution**: **Repeated squaring** reduces complexity from \( \mathcal{O}(e) \) to \( \mathcal{O}(\log e) \).
+
+**Algorithm**:
+
+1. Convert \( e \) to binary (e.g., \( 17 = 10001_2 \)).
+2. Compute powers of \( m \) modulo \( n \) using squaring:  
+   \[
+   m^{2^k} \mod n = \left(m^{2^{k-1}}\right)^2 \mod n
+   \]
+3. Multiply relevant powers based on binary representation.
+
+**Example**: Compute \( 65^{17} \mod 3233 \):
+
+1. \( 17 = 16 + 1 = 2^4 + 2^0 \).
+2. Compute powers:
+   - \( 65^1 \mod 3233 = 65 \)
+   - \( 65^2 \mod 3233 = 4225 \mod 3233 = 992 \)
+   - \( 65^4 = (65^2)^2 \mod 3233 = 992^2 \mod 3233 = 2816 \)
+   - \( 65^8 = 2816^2 \mod 3233 = 256 \)
+   - \( 65^{16} = 256^2 \mod 3233 = 633 \)
+3. Combine results:  
+   \[
+   65^{17} \mod 3233 = (65^{16} \times 65^1) \mod 3233 = (633 \times 65) \mod 3233 = 2790
+   \]
+
+**Why It Works**:
+
+- Binary decomposition minimizes multiplications (e.g., 17 requires 5 steps instead of 16).
+- Each step uses \( \mod n \) to keep numbers small.
+
+---
+
+#### **4. Full Example: RSA Workflow**
+
+**Key Setup**:
+
+- \( p = 61 \), \( q = 53 \), \( n = 3233 \), \( \phi(n) = 3120 \), \( e = 17 \), \( d = 2753 \).
+
+**Encryption**:
+
+- \( m = 65 \):  
+  \[
+  c = 65^{17} \mod 3233 = 2790 \quad (\text{using repeated squaring})
+  \]
+
+**Decryption**:
+
+- \( c = 2790 \):  
+  \[
+  m = 2790^{2753} \mod 3233 = 65 \quad (\text{repeated squaring with binary decomposition of 2753})
+  \]
+
+---
+
+#### **5. Security Implications**
+
+- **Factoring \( n \) Breaks RSA**: If Trudy factors \( n = 3233 \) into \( 61 \times 53 \), she computes \( \phi(n) = 3120 \) and \( d = 17^{-1} \mod 3120 = 2753 \), decrypting any message.
+- **Key Size**: Modern RSA uses \( n \) with 2048–4096 bits. Factoring a 2048-bit \( n \) is currently infeasible.
+
+---
+
+### **Summary**
+
+- **Factoring Problem**: RSA security hinges on the difficulty of factoring \( n = pq \).
+- **Modular Exponentiation**: Encryption (\( m^e \mod n \)) and decryption (\( c^d \mod n \)) use large exponents.
+- **Repeated Squaring**: Efficiently computes \( m^e \mod n \) in \( \mathcal{O}(\log e) \) steps.
+
+This mathematical foundation ensures RSA remains secure against classical attacks, though quantum computing poses a future risk.
