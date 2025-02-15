@@ -16,26 +16,35 @@ def knapsack_encrypt(plaintext, public_key):
         ciphertext.append(encrypted_char)
     return ciphertext
 
-def knapsack_decrypt(ciphertext, private_key, n, m): # PRivate key is the superincreasing sequence(ideally)
+def mod_inverse(a, m):
     """
-    Decrypt the ciphertext using the private key, n, and m.
-    Each encrypted value is multiplied by n and taken modulo m to get c_prime.
-    c_prime is then used to reconstruct the original binary representation of the character.
-    The binary representation is converted back to the character.
+    Compute the modular inverse of a modulo m using the Extended Euclidean Algorithm.
+    """
+    # Alternatively, you can use pow(a, -1, m) in Python 3.8+
+    a = a % m
+    for x in range(1, m):
+        if (a * x) % m == 1:
+            return x
+    raise ValueError("No modular inverse exists for a = {} modulo m = {}".format(a, m))
+
+def knapsack_decrypt(ciphertext, private_key, n_inv, m):
+    """
+    Decrypt the ciphertext using the private (superincreasing) key, n_inv, and m.
+    n_inv is the modular inverse of n modulo m.
+    Each encrypted integer is multiplied by n_inv modulo m to recover c_prime,
+    which is then used with a greedy algorithm to recover the original binary string.
     """
     decrypted_text = ""
     for encrypted_char in ciphertext:
-        # Calculate c_prime
-        c_prime = (encrypted_char * n) % m # Reverses the modular multiplication on line 15
+        # Use the modular inverse to reverse the modular multiplication during encryption
+        c_prime = (encrypted_char * n_inv) % m  
         binary_char = ""
-        # Reconstruct binary representation from c_prime
         for pk in reversed(private_key):
             if pk <= c_prime:
                 binary_char = '1' + binary_char
                 c_prime -= pk
             else:
                 binary_char = '0' + binary_char
-        # Convert binary representation to character
         decrypted_text += chr(int(binary_char, 2))
     return decrypted_text
 
@@ -65,6 +74,9 @@ def main():
     key_file = sys.argv[4]
     n = int(sys.argv[5])
     m = int(sys.argv[6])
+    
+    # Compute n_inv, the modular inverse of n modulo m
+    n_inv = mod_inverse(n, m)
 
     # Read input text and key from files
     input_text = read_file(input_file)
@@ -81,8 +93,8 @@ def main():
         private_key = key
         # Convert input text to list of integers (ciphertext)
         ciphertext = list(map(int, input_text.split()))
-        # Decrypt the ciphertext using the private key, n, and m
-        decrypted_text = knapsack_decrypt(ciphertext, private_key, n, m)
+        # Decrypt the ciphertext using the private key, n_inv, and m
+        decrypted_text = knapsack_decrypt(ciphertext, private_key, n_inv, m)
         # Write the decrypted text to the output file
         write_file(output_file, decrypted_text)
     else:
