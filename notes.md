@@ -10,9 +10,9 @@
   - _Alice_ sends an encrypted SMS to _Bob_.
   - **Key Setup**: 64-bit key + 22-bit frame number → XOR to initialize LFSRs.
   - **Attack by Trudy**:
-    - _Trudy_ records 64 bits of keystream and uses a **time-memory trade-off** (Rainbow Table) to recover the key in \( 2^{54} \) operations.
+    - _Trudy_ records 64 bits of keystream and uses a **time-memory trade-off** (Rainbow Table) to recover the key in $2^{54}$ operations.
 - **Math**:
-  - Feedback polynomials (e.g., LFSR1: \( x^{19} + x^{18} + x^{17} + x^{14} + 1 \)).
+  - Feedback polynomials (e.g., LFSR1: $x^{19} + x^{18} + x^{17} + x^{14} + 1$).
 
 ---
 
@@ -51,18 +51,18 @@
 
 - **Feistel Structure**:
   - 64-bit block, 56-bit key, 16 rounds.
-  - **Round Function \( F(R, K) \)**:
-    1. **Expansion**: 32-bit \( R \) → 48 bits via permutation.
-    2. **Key Mixing**: \( \text{XOR}(E(R), K\_{\text{sub}}) \).
+  - **Round Function $F(R, K)$**:
+    1. **Expansion**: 32-bit $R$ → 48 bits via permutation.
+    2. **Key Mixing**: $\text{XOR}(E(R), K_{sub})$.
     3. **S-Boxes**: 8 non-linear 6→4-bit substitutions (e.g., S1: 0x0E → 14).
     4. **Permutation (P-box)**: Diffuse bits.
 - **Math**:
-  - Key Schedule: Permuted Choice 1 (PC1) → 56 bits → split into \( C_0, D_0 \).
-  - Each round: Left shift \( C_i, D_i \) (e.g., round 1: 1 shift, round 2: 1 shift, ..., round 16: 2 shifts).
+  - Key Schedule: Permuted Choice 1 (PC1) → 56 bits → split into $C_0, D_0$.
+  - Each round: Left shift $C_i, D_i$ (e.g., round 1: 1 shift, round 2: 1 shift, ..., round 16: 2 shifts).
 - **Example**:
   - _Alice_ encrypts "Hello!" (hex: 48 65 6C 6C 6F 21) with DES.
   - **Key**: "DESkey56" (56 bits).
-  - _Trudy_ brute-forces in \( 2^{56} \) steps (≈ 72 quadrillion attempts).
+  - _Trudy_ brute-forces in $2^{56}$ steps (≈ 72 quadrillion attempts).
 
 ---
 
@@ -72,26 +72,18 @@
   - **State**: 4x4 byte matrix (128 bits).
   - **Key Expansion**:
     - 128-bit key → 44 words (176 bytes) using XOR, rotation, and S-box.
-  - **Round Steps**:
-    1. **SubBytes**: Non-linear S-box (e.g., \( \text{SubByte}(0x53) = 0xED \)).
-    2. **ShiftRows**: Cyclic shifts (Row 0: 0, Row 1: 1, Row 2: 2, Row 3: 3).
-    3. **MixColumns**: Matrix multiplication in GF(\( 2^8 \)):  
-       \[  
-       \begin{bmatrix}  
-       02 & 03 & 01 & 01 \\  
-       01 & 02 & 03 & 01 \\  
-       01 & 01 & 02 & 03 \\  
-       03 & 01 & 01 & 02  
-       \end{bmatrix}  
-       \times  
-       \begin{bmatrix}  
-       s*{0,c} \\  
-       s*{1,c} \\  
-       s*{2,c} \\  
-       s*{3,c}  
-       \end{bmatrix}  
-       \]
-    4. **AddRoundKey**: XOR with round key.
+  - **Round Steps**: 1. **SubBytes**: Non-linear S-box (e.g., $\text{SubByte}(0x53) = 0xED$). 2. **ShiftRows**: Cyclic shifts (Row 0: 0, Row 1: 1, Row 2: 2, Row 3: 3). 3. **MixColumns**: Matrix multiplication in GF($2^8$):
+    $$
+    \begin{bmatrix}
+    02 & 03 & 01 & 01 \\
+    01 & 02 & 03 & 01 \\
+    01 & 01 & 02 & 03 \\
+    03 & 01 & 01 & 02
+    \end{bmatrix}
+    $$
+
+4. **AddRoundKey**: XOR with round key.
+
 - **Example**:
   - _Alice_ encrypts "CryptoIsFun" (128-bit block) with AES-256.
   - **Key**: 256-bit randomly generated.
@@ -104,26 +96,26 @@
 #### **RSA (Rivest-Shamir-Adleman)**
 
 - **Key Generation**:
-  1. Choose primes \( p = 11 \), \( q = 23 \).
-  2. Compute \( n = p \times q = 253 \), \( \phi(n) = (p-1)(q-1) = 220 \).
-  3. Choose \( e = 3 \) (coprime to \( \phi(n) \)).
-  4. Compute \( d = e^{-1} \mod \phi(n) = 147 \).
-- **Encryption**: \( c = m^e \mod n \).
-  - _Bob_ sends \( m = 100 \): \( c = 100^3 \mod 253 = 156 \).
-- **Decryption**: \( m = c^d \mod n = 156^{147} \mod 253 = 100 \).
+  1. Choose primes $p = 11$, $q = 23$.
+  2. Compute $n = p \times q = 253$, $\phi(n) = (p-1)(q-1) = 220$.
+  3. Choose $e = 3$ (coprime to $\phi(n)$).
+  4. Compute $d = e^{-1} \mod \phi(n) = 147$.
+- **Encryption**: $c = m^e \mod n$.
+  - _Bob_ sends $m = 100$: $c = 100^3 \mod n = 156$.
+- **Decryption**: $m = c^d \mod n = 156^{147} \mod n = 100$.
 - **Attack**:
-  - _Trudy_ tries to factor \( n = 253 \) → \( p = 11 \), \( q = 23 \), but fails for large \( n \) (e.g., 2048 bits).
+  - _Trudy_ tries to factor $n = 253$ → $p = 11$, $q = 23$, but fails for large $n$ (e.g., 2048 bits).
 
 ---
 
 #### **Digital Signatures (RSA-Based)**
 
 - **Signing**:
-  1. _Alice_ hashes message \( M \) → \( H(M) = \text{SHA-256}(M) \).
-  2. Encrypts hash with private key: \( \text{Signature} = H(M)^d \mod n \).
+  1. _Alice_ hashes message $M$ → $H(M) = \text{SHA-256}(M)$.
+  2. Encrypts hash with private key: $\text{Signature} = H(M)^d \mod n$.
 - **Verification**:
-  1. _Bob_ decrypts signature with Alice’s public key: \( H'(M) = \text{Signature}^e \mod n \).
-  2. Compares \( H'(M) \) with \( \text{SHA-256}(M) \).
+  1. _Bob_ decrypts signature with Alice’s public key: $H'(M) = \text{Signature}^e \mod n$.
+  2. Compares $H'(M)$ with $\text{SHA-256}(M)$.
 - **Example**:
   - _Alice_ signs "Transfer $100" → _Trudy_ can’t reuse the signature for "Transfer $1000" (hash mismatch).
 
@@ -134,17 +126,17 @@
 #### **Merkle-Hellman (Broken)**
 
 - **Key Generation**:
-  1. **Superincreasing Sequence**: \( \{2, 3, 6, 13\} \).
-  2. Choose modulus \( M = 20 > \sum a_i \), multiplier \( W = 7 \) (coprime to \( M \)).
-  3. **Public Key**: \( b_i = W \times a_i \mod M → \{14, 1, 2, 11\} \).
+  1. **Superincreasing Sequence**: $\{2, 3, 6, 13\}$.
+  2. Choose modulus $M = 20 > \sum a_i$, multiplier $W = 7$ (coprime to $M$).
+  3. **Public Key**: $b_i = W \times a_i \mod M \to \{14, 1, 2, 11\}$.
 - **Encryption**:
-  - _Bob_ encrypts bits \( 1101 \) → \( S = 14 + 1 + 11 = 26 \).
+  - _Bob_ encrypts bits $1101$ → $S = 14 + 1 + 11 = 26$.
 - **Decryption**:
-  1. Compute \( S' = W^{-1} \times S \mod M = 3 \times 26 \mod 20 = 18 \).
-  2. Solve superincreasing knapsack: \( 13 + 6 - 1 = 18 \).
+  1. Compute $S' = W^{-1} \times S \mod M = 3 \times 26 \mod M = 18$.
+  2. Solve superincreasing knapsack: $13 + 6 - 1 = 18$.
 - **Shamir’s Lattice Attack**:
-  - _Trudy_ constructs a lattice from public key \( \{14, 1, 2, 11\} \).
-  - Uses **LLL algorithm** to find short vectors, recovering \( W = 7 \), \( M = 20 \).
+  - _Trudy_ constructs a lattice from public key $\{14, 1, 2, 11\}$.
+  - Uses **LLL algorithm** to find short vectors, recovering $W = 7$, $M = 20$.
 
 ---
 
@@ -157,18 +149,18 @@
 3. **AES in TLS**:
    - _Alice_ visits "https://bank.com". AES-256 encrypts her session.
 4. **RSA in SSH**:
-   - _Bob_ logs into a server using RSA-2048. _Trudy_ cannot factor \( n \).
+   - _Bob_ logs into a server using RSA-2048. _Trudy_ cannot factor $n$.
 
 ---
 
 ### **6. Mathematical Appendix**
 
-#### **Galois Field GF(\( 2^8 \))**
+#### **Galois Field GF($2^8$)**
 
-- **Addition**: XOR (e.g., \( 0x57 + 0x83 = 0xD4 \)).
-- **Multiplication**: Polynomial multiplication modulo \( x^8 + x^4 + x^3 + x + 1 \).
-  - Example: \( 0x57 \times 0x83 \):
-    - \( (x^6 + x^4 + x^2 + x + 1)(x^7 + x + 1) \mod \text{irreducible} \).
+- **Addition**: XOR (e.g., $0x57 + 0x83 = 0xD4$).
+- **Multiplication**: Polynomial multiplication modulo $x^8 + x^4 + x^3 + x + 1$.
+  - Example: $0x57 \times 0x83$:
+    - $(x^6 + x^4 + x^2 + x + 1)(x^7 + x + 1) \mod \text{irreducible}$.
 
 #### **LLL Algorithm (Lattice Reduction)**
 
@@ -180,7 +172,7 @@
 #### **1. The Factoring Problem**
 
 **Concept**:  
-RSA's security relies on the **factoring problem**: factoring a large composite number \( n \) into its prime factors \( p \) and \( q \) is computationally intractable. While multiplying \( p \) and \( q \) is easy, reversing the process (factoring \( n \)) is exponentially harder as \( n \) grows.
+RSA's security relies on the **factoring problem**: factoring a large composite number $n$ into its prime factors $p$ and $q$ is computationally intractable. While multiplying $p$ and $q$ is easy, reversing the process (factoring $n$) is exponentially harder as $n$ grows.
 
 **Why Factoring is Hard**:
 
@@ -188,12 +180,12 @@ RSA's security relies on the **factoring problem**: factoring a large composite 
   \[
   \mathcal{O}\left(\exp\left(\left(\sqrt[3]{\frac{64}{9}} + o(1)\right) (\ln n)^{1/3} (\ln \ln n)^{2/3}\right)\right)
   \]
-  For a 2048-bit \( n \), this requires millions of years on classical computers.
-- **Quantum Threat**: Shor’s algorithm (quantum) factors \( n \) in polynomial time, but large-scale quantum computers don’t yet exist.
+  For a 2048-bit $n$, this requires millions of years on classical computers.
+- **Quantum Threat**: Shor’s algorithm (quantum) factors $n$ in polynomial time, but large-scale quantum computers don’t yet exist.
 
 **Example**:
 
-- Let \( n = 3233 \). Factoring it requires testing divisors until finding \( p = 61 \) and \( q = 53 \). For large \( n \) (e.g., 617 digits), this is infeasible.
+- Let $n = 3233$. Factoring it requires testing divisors until finding $p = 61$ and $q = 53$. For large $n$ (e.g., 617 digits), this is infeasible.
 
 ---
 
@@ -201,66 +193,66 @@ RSA's security relies on the **factoring problem**: factoring a large composite 
 
 **Key Generation**:
 
-1. Choose primes \( p = 61 \), \( q = 53 \).
-2. Compute \( n = p \times q = 3233 \) and \( \phi(n) = (p-1)(q-1) = 3120 \).
-3. Choose \( e = 17 \) (public exponent) such that \( \gcd(e, \phi(n)) = 1 \).
-4. Compute \( d = e^{-1} \mod \phi(n) = 2753 \) (private exponent).
+1. Choose primes $p = 61$, $q = 53$.
+2. Compute $n = p \times q = 3233$ and $\phi(n) = (p-1)(q-1) = 3120$.
+3. Choose $e = 17$ (public exponent) such that $\gcd(e, \phi(n)) = 1$.
+4. Compute $d = e^{-1} \mod \phi(n) = 2753$ (private exponent).
 
 **Encryption & Decryption**:
 
-- **Encrypt** plaintext \( m \) (e.g., \( m = 65 \)):  
-  \[
+- **Encrypt** plaintext $m$ (e.g., $m = 65$):
+  $$
   c = m^e \mod n = 65^{17} \mod 3233 = 2790
-  \]
-- **Decrypt** ciphertext \( c \):  
-  \[
+  $$
+- **Decrypt** ciphertext $c$:
+  $$
   m = c^d \mod n = 2790^{2753} \mod 3233 = 65
-  \]
+  $$
 
 **Mathematical Foundation**:
 
-- **Euler’s Theorem**: If \( \gcd(m, n) = 1 \), \( m^{\phi(n)} \equiv 1 \mod n \).
-- **Decryption Works Because**:  
-  \[
+- **Euler’s Theorem**: If $\gcd(m, n) = 1$, $m^{\phi(n)} \equiv 1 \mod n$.
+- **Decryption Works Because**:
+  $$
   c^d \mod n = (m^e)^d \mod n = m^{ed} \mod n = m^{1 + k\phi(n)} \mod n = m \mod n
-  \]  
-  (since \( ed \equiv 1 \mod \phi(n) \)).
+  $$
+  (since $ed \equiv 1 \mod \phi(n)$).
 
 ---
 
 #### **3. Repeated Squaring for Efficient Exponentiation**
 
-**Problem**: Directly computing \( m^e \mod n \) for large \( e \) (e.g., \( 2^{1024} \)) is computationally infeasible.
+**Problem**: Directly computing $m^e \mod n$ for large $e$ (e.g., $2^{1024}$) is computationally infeasible.
 
-**Solution**: **Repeated squaring** reduces complexity from \( \mathcal{O}(e) \) to \( \mathcal{O}(\log e) \).
+**Solution**: **Repeated squaring** reduces complexity from $\mathcal{O}(e)$ to $\mathcal{O}(\log e)$.
 
 **Algorithm**:
 
-1. Convert \( e \) to binary (e.g., \( 17 = 10001_2 \)).
-2. Compute powers of \( m \) modulo \( n \) using squaring:  
-   \[
+1. Convert $e$ to binary (e.g., $17 = 10001_2$).
+2. Compute powers of $m$ modulo $n$ using squaring:
+   $$
    m^{2^k} \mod n = \left(m^{2^{k-1}}\right)^2 \mod n
-   \]
+   $$
 3. Multiply relevant powers based on binary representation.
 
-**Example**: Compute \( 65^{17} \mod 3233 \):
+**Example**: Compute $65^{17} \mod 3233$:
 
-1. \( 17 = 16 + 1 = 2^4 + 2^0 \).
+1. $17 = 16 + 1 = 2^4 + 2^0$.
 2. Compute powers:
-   - \( 65^1 \mod 3233 = 65 \)
-   - \( 65^2 \mod 3233 = 4225 \mod 3233 = 992 \)
-   - \( 65^4 = (65^2)^2 \mod 3233 = 992^2 \mod 3233 = 2816 \)
-   - \( 65^8 = 2816^2 \mod 3233 = 256 \)
-   - \( 65^{16} = 256^2 \mod 3233 = 633 \)
-3. Combine results:  
-   \[
+   - $65^1 \mod 3233 = 65$
+   - $65^2 \mod 3233 = 4225 \mod 3233 = 992$
+   - $65^4 = (65^2)^2 \mod 3233 = 992^2 \mod 3233 = 2816$
+   - $65^8 = 2816^2 \mod 3233 = 256$
+   - $65^{16} = 256^2 \mod 3233 = 633$
+3. Combine results:
+   $$
    65^{17} \mod 3233 = (65^{16} \times 65^1) \mod 3233 = (633 \times 65) \mod 3233 = 2790
-   \]
+   $$
 
 **Why It Works**:
 
 - Binary decomposition minimizes multiplications (e.g., 17 requires 5 steps instead of 16).
-- Each step uses \( \mod n \) to keep numbers small.
+- Each step uses $\mod n$ to keep numbers small.
 
 ---
 
@@ -268,35 +260,35 @@ RSA's security relies on the **factoring problem**: factoring a large composite 
 
 **Key Setup**:
 
-- \( p = 61 \), \( q = 53 \), \( n = 3233 \), \( \phi(n) = 3120 \), \( e = 17 \), \( d = 2753 \).
+- $p = 61$, $q = 53$, $n = 3233$, $\phi(n) = 3120$, $e = 17$, $d = 2753$.
 
 **Encryption**:
 
-- \( m = 65 \):  
-  \[
+- $m = 65$:
+  $$
   c = 65^{17} \mod 3233 = 2790 \quad (\text{using repeated squaring})
-  \]
+  $$
 
 **Decryption**:
 
-- \( c = 2790 \):  
-  \[
+- $c = 2790$:
+  $$
   m = 2790^{2753} \mod 3233 = 65 \quad (\text{repeated squaring with binary decomposition of 2753})
-  \]
+  $$
 
 ---
 
 #### **5. Security Implications**
 
-- **Factoring \( n \) Breaks RSA**: If Trudy factors \( n = 3233 \) into \( 61 \times 53 \), she computes \( \phi(n) = 3120 \) and \( d = 17^{-1} \mod 3120 = 2753 \), decrypting any message.
-- **Key Size**: Modern RSA uses \( n \) with 2048–4096 bits. Factoring a 2048-bit \( n \) is currently infeasible.
+- **Factoring $n$ Breaks RSA**: If Trudy factors $n = 3233$ into $61 \times 53$, she computes $\phi(n) = 3120$ and $d = 17^{-1} \mod 3120 = 2753$, decrypting any message.
+- **Key Size**: Modern RSA uses $n$ with 2048–4096 bits. Factoring a 2048-bit $n$ is currently infeasible.
 
 ---
 
 ### **Summary**
 
-- **Factoring Problem**: RSA security hinges on the difficulty of factoring \( n = pq \).
-- **Modular Exponentiation**: Encryption (\( m^e \mod n \)) and decryption (\( c^d \mod n \)) use large exponents.
-- **Repeated Squaring**: Efficiently computes \( m^e \mod n \) in \( \mathcal{O}(\log e) \) steps.
+- **Factoring Problem**: RSA security hinges on the difficulty of factoring $n = pq$.
+- **Modular Exponentiation**: Encryption ($m^e \mod n$) and decryption ($c^d \mod n$) use large exponents.
+- **Repeated Squaring**: Efficiently computes $m^e \mod n$ in $\mathcal{O}(\log e)$ steps.
 
 This mathematical foundation ensures RSA remains secure against classical attacks, though quantum computing poses a future risk.
