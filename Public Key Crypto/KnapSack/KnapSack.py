@@ -2,25 +2,24 @@ import sys
 
 def knapsack_encrypt(plaintext, public_key):
     """
-    Encrypt the plaintext using the public key.
-    Each character in the plaintext is converted to its binary representation.
-    Each bit of the binary representation is multiplied by the corresponding element in the public key.
-    The sum of these products is the encrypted value for that character.
+    Encrypt the plaintext (UTF-8) using the public key.
+    The plaintext is first encoded as UTF-8 bytes.
+    Each byte is converted to its 8-bit binary representation.
+    Each bit is multiplied by the corresponding element in the public key.
+    The sum of these products is the encrypted value for that byte.
     """
     ciphertext = []
-    for char in plaintext:
-        # Convert character to 8-bit binary
-        binary_char = format(ord(char), '08b')
-        # Encrypt character by summing products of bits and public key elements
-        encrypted_char = sum(int(bit) * pk for bit, pk in zip(binary_char, public_key))
-        ciphertext.append(encrypted_char)
+    plaintext_bytes = plaintext.encode('utf-8')
+    for byte in plaintext_bytes:
+        binary_byte = format(byte, '08b')
+        encrypted_byte = sum(int(bit) * pk for bit, pk in zip(binary_byte, public_key))
+        ciphertext.append(encrypted_byte)
     return ciphertext
 
 def mod_inverse(a, m):
     """
     Compute the modular inverse of a modulo m using the Extended Euclidean Algorithm.
     """
-    # Alternatively, you can use pow(a, -1, m) in Python 3.8+
     a = a % m
     for x in range(1, m):
         if (a * x) % m == 1:
@@ -30,23 +29,23 @@ def mod_inverse(a, m):
 def knapsack_decrypt(ciphertext, private_key, n_inv, m):
     """
     Decrypt the ciphertext using the private (superincreasing) key, n_inv, and m.
-    n_inv is the modular inverse of n modulo m.
-    Each encrypted integer is multiplied by n_inv modulo m to recover c_prime,
-    which is then used with a greedy algorithm to recover the original binary string.
+    Each encrypted integer is multiplied by n_inv modulo m to recover c_prime.
+    The greedy algorithm reconstructs the original 8-bit binary string for each byte.
+    The resulting byte sequence is decoded from UTF-8.
     """
-    decrypted_text = ""
-    for encrypted_char in ciphertext:
-        # Use the modular inverse to reverse the modular multiplication during encryption
-        c_prime = (encrypted_char * n_inv) % m  
-        binary_char = ""
+    decrypted_bytes = []
+    for encrypted_val in ciphertext:
+        c_prime = (encrypted_val * n_inv) % m
+        binary_byte = ""
         for pk in reversed(private_key):
             if pk <= c_prime:
-                binary_char = '1' + binary_char
+                binary_byte = '1' + binary_byte
                 c_prime -= pk
             else:
-                binary_char = '0' + binary_char
-        decrypted_text += chr(int(binary_char, 2))
-    return decrypted_text
+                binary_byte = '0' + binary_byte
+        decrypted_bytes.append(int(binary_byte, 2))
+    # Convert the list of byte integers to a bytes object and decode as UTF-8
+    return bytes(decrypted_bytes).decode('utf-8')
 
 def read_file(file_path):
     """
@@ -84,21 +83,20 @@ def main():
     key = [int(k) for k in key]
 
     if operation == "-e":
-        public_key = key
-        # Encrypt the input text using the public key
+        # Compute public key: each public key element = (n * private key element) mod m
+        public_key = [(n * w) % m for w in key]
+        # Encrypt using the public key
         encrypted_text = knapsack_encrypt(input_text, public_key)
-        # Write the encrypted text to the output file
         write_file(output_file, ' '.join(map(str, encrypted_text)))
     elif operation == "-d":
         private_key = key
         # Convert input text to list of integers (ciphertext)
         ciphertext = list(map(int, input_text.split()))
-        # Decrypt the ciphertext using the private key, n_inv, and m
+        # Decrypt using the private key, n_inv, and m
         decrypted_text = knapsack_decrypt(ciphertext, private_key, n_inv, m)
-        # Write the decrypted text to the output file
         write_file(output_file, decrypted_text)
     else:
-        print("Invalid operation. Use 'encrypt' or 'decrypt'.")
+        print("Invalid operation. Use '-e' or '-d'.")
 
 if __name__ == "__main__":
     main()
