@@ -1,11 +1,45 @@
+| **Criteria**                  | **Block Ciphers**                                                             | **Stream Ciphers**                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **Basic Unit**                | Encrypts data in fixed-size blocks (e.g., 64-bit or 128-bit blocks).          | Encrypts data bit-by-bit or byte-by-byte (as a continuous stream).                  |
+| **Encryption Method**         | Uses substitution and permutation (via Feistel networks or SPN structures).   | Combines plaintext with a pseudorandom keystream (generated using a key and nonce). |
+| **Speed**                     | Slower for large data (due to block processing and padding).                  | Faster for real-time/bulk data (no padding, minimal latency).                       |
+| **Error Propagation**         | Errors in ciphertext affect an entire block (depends on mode, e.g., CBC).     | Errors affect only the corresponding bit/byte (no propagation).                     |
+| **Security Considerations**   | Vulnerable to padding oracle attacks (in modes like CBC).                     | Vulnerable if keystream is reused (e.g., WEP’s RC4 key reuse flaw).                 |
+| **Use Cases**                 | File encryption, databases, SSL/TLS (with modes like AES-GCM).                | Real-time communication (e.g., Wi-Fi, Bluetooth, VoIP).                             |
+| **Padding Requirement**       | Requires padding to fill incomplete blocks (e.g., PKCS#7).                    | No padding needed (works on arbitrary-length data).                                 |
+| **Parallel Processing**       | Possible in certain modes (e.g., ECB, CTR).                                   | Not parallelizable (keystream is state-dependent).                                  |
+| **Examples**                  | AES, DES, Blowfish, 3DES.                                                     | RC4, ChaCha20, Salsa20, A5/1 (GSM).                                                 |
+| **Modes of Operation**        | ECB, CBC, CFB, OFB, CTR, GCM (modes define how blocks are chained/processed). | Typically no modes; keystream is XORed with plaintext directly.                     |
+| **Key + Nonce/IV Usage**      | IV required in some modes (e.g., CBC, CTR) to ensure uniqueness.              | Nonce (number used once) required to generate unique keystreams.                    |
+| **Memory Efficiency**         | Requires memory to store entire blocks during processing.                     | Minimal memory usage (processes data incrementally).                                |
+| **Implementation Complexity** | More complex due to mode selection, padding, and block management.            | Simpler design but relies on secure pseudorandom keystream generation.              |
+| **Resistance to Attacks**     | Susceptible to block-level attacks (e.g., meet-in-the-middle for DES).        | Susceptible to keystream reuse (e.g., two-time pad vulnerability).                  |
+| **Resource Usage**            | Better suited for hardware acceleration (fixed-block operations).             | Efficient in software (lightweight operations).                                     |
+| **Historical Context**        | Dominated early standards (e.g., DES in 1970s).                               | Gained popularity for real-time use cases (e.g., RC4 in 1980s).                     |
+
+---
+
+### **Key Takeaways**:
+
+1. **Block Ciphers**:
+
+   - Ideal for structured/static data (e.g., files, databases).
+   - Provide robustness with modes like AES-GCM (combining encryption and authentication).
+   - Require careful handling of IVs and padding.
+
+2. **Stream Ciphers**:
+   - Optimized for real-time/streaming data (e.g., video, voice).
+   - Vulnerable to key/nonce reuse but highly efficient.
+   - Modern designs (e.g., ChaCha20) prioritize speed and security.
+
 ### **1. Stream Ciphers**
 
 #### **A5/1 (GSM Encryption)**
 
 - **Structure**:
-  - 3 LFSRs (Lengths: 19, 22, 23 bits).
+  - 3 LFSRs Linear Feedback Shift Register (Lengths: 19, 22, 23 bits).
   - **Clocking Rule**: Majority function on bits 8, 10, 10 of each LFSR.
-  - **Output**: XOR of the 3 LFSRs’ least significant bits.
+  - **Output**: XOR of the 3 LFSRs’ most significant bits.
 - **Example**:
   - _Alice_ sends an encrypted SMS to _Bob_.
   - **Key Setup**: 64-bit key + 22-bit frame number → XOR to initialize LFSRs.

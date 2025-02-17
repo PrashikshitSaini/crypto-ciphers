@@ -34,7 +34,7 @@ def key_scheduling_algo(key):
     j = 0
     for i in range(256):
         j = (j + S[i] + T[i]) % 256
-        S[i], S[j] = S[j], S[i] # Swapping the value to create randomness
+        S[i], S[j] = S[j], S[i] # Swapping the value to create randomness - NOT TRUE RANDOMNESS
 
 
 def pseduo_random_gen_algo(data):
