@@ -11,10 +11,10 @@ long powerModN(long base, long exponent, long modulus)
     int bits[MAX_BITS];
     int bitCount;
 
-    binary(exponent, bits, bitCount); // Convert exponent to binary
+    binary(exponent, bits, bitCount);
 
     long result = 1;
-    long power = base % modulus; // Start with base mod modulus
+    long power = base % modulus;
 
     for (int i = 0; i < bitCount; i++)
     {
@@ -22,7 +22,7 @@ long powerModN(long base, long exponent, long modulus)
         {
             result = (result * power) % modulus;
         }
-        power = (power * power) % modulus; // Square the base
+        power = (power * power) % modulus;
     }
 
     return result;
@@ -40,4 +40,4 @@ void binary(long decimalValue, int bits[], int &bitCount)
     }
 }
 // g++ program5-driver.cpp student5.cpp -o a.exe
-// a.exe 2 10 1000
+// a.exe 94 7 209

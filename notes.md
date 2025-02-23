@@ -106,15 +106,18 @@
   - **State**: 4x4 byte matrix (128 bits).
   - **Key Expansion**:
     - 128-bit key → 44 words (176 bytes) using XOR, rotation, and S-box.
-  - **Round Steps**: 1. **SubBytes**: Non-linear S-box (e.g., $\text{SubByte}(0x53) = 0xED$). 2. **ShiftRows**: Cyclic shifts (Row 0: 0, Row 1: 1, Row 2: 2, Row 3: 3). 3. **MixColumns**: Matrix multiplication in GF($2^8$):
-    $$
-    \begin{bmatrix}
-    02 & 03 & 01 & 01 \\
-    01 & 02 & 03 & 01 \\
-    01 & 01 & 02 & 03 \\
-    03 & 01 & 01 & 02
-    \end{bmatrix}
-    $$
+  - **Round Steps**:
+  1. **SubBytes**: Non-linear S-box (e.g., $\text{SubByte}(0x53) = 0xED$).
+  2. **ShiftRows**: Cyclic shifts (Row 0: 0, Row 1: 1, Row 2: 2, Row 3: 3).
+  3. **MixColumns**: Matrix multiplication in GF($2^8$):
+     $$
+     \begin{bmatrix}
+     02 & 03 & 01 & 01 \\
+     01 & 02 & 03 & 01 \\
+     01 & 01 & 02 & 03 \\
+     03 & 01 & 01 & 02
+     \end{bmatrix}
+     $$
 
 4. **AddRoundKey**: XOR with round key.
 
