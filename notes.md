@@ -1,3 +1,7 @@
+# Before we start reading and dive deeper into cryptography, although not super Required. But I would suggest to also start learning these mathematics concepts mentioned in [MathCheck.md](MathCheck.md)
+
+# **Cryptography**
+
 | **Criteria**                  | **Block Ciphers**                                                             | **Stream Ciphers**                                                                  |
 | ----------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | **Basic Unit**                | Encrypts data in fixed-size blocks (e.g., 64-bit or 128-bit blocks).          | Encrypts data bit-by-bit or byte-by-byte (as a continuous stream).                  |
@@ -329,3 +333,156 @@ RSA's security relies on the **factoring problem**: factoring a large composite 
 - **Repeated Squaring**: Efficiently computes $m^e \mod n$ in $\mathcal{O}(\log e)$ steps.
 
 This mathematical foundation ensures RSA remains secure against classical attacks, though quantum computing poses a future risk.
+
+# **Diffie-Hellman Key Exchange & Elliptic Curve Cryptography (ECC)**
+
+---
+
+## **1. Diffie-Hellman Key Exchange**
+
+### **Objective**
+
+Establish a **shared symmetric key** over an insecure channel using modular exponentiation. Not used for encryption/signing directly.
+
+---
+
+### **Protocol Steps**
+
+1. **Public Parameters**:
+
+   - Large prime $p$ (e.g., 2048 bits).
+   - Generator $g$ (primitive root modulo $p$).
+
+2. **Key Generation (Alice and Bob)**:
+
+   - **Alice**: Picks private key $a \in \{2, ..., p-2\}$, computes $A = g^a \mod p$.
+   - **Bob**: Picks private key $b \in \{2, ..., p-2\}$, computes $B = g^b \mod p$.
+
+3. **Shared Secret**:
+   - **Alice**: Computes $S = B^a \mod p$.
+   - **Bob**: Computes $S = A^b \mod p$.
+   - Result: $S = g^{ab} \mod p$.
+
+---
+
+### **Example**
+
+- Let $p = 23$, $g = 5$.
+- **Alice**: $a = 6$, $A = 5^6 \mod 23 = 8$.
+- **Bob**: $b = 15$, $B = 5^{15} \mod 23 = 19$.
+- **Shared Secret**:
+  - Alice: $S = 19^6 \mod 23 = 2$.
+  - Bob: $S = 8^{15} \mod 23 = 2$.
+
+---
+
+### **Security: Discrete Logarithm Problem (DLP)**
+
+- **Definition**: Given $g, x = g^k \mod p$, find $k$.
+- **Complexity**: No efficient classical algorithm (sub-exponential time via Index Calculus).
+- **Not NP-Complete**: Solutions can be verified in polynomial time, but no reduction to NP-hard problems.
+
+---
+
+### **Man-in-the-Middle (MITM) Attack**
+
+- **Vulnerability**: DH does not authenticate parties.
+- **Scenario**:
+  1. Trudy intercepts $A$ and $B$, sends $T = g^t \mod p$ to both.
+  2. Trudy computes $S_1 = A^t \mod p$ and $S_2 = B^t \mod p$.
+- **Mitigation**: Use authenticated channels (e.g., TLS with certificates).
+
+---
+
+## **2. Elliptic Curve Cryptography (ECC)**
+
+### **Why ECC?**
+
+- **Smaller Key Sizes**: 256-bit ECC ≈ 3072-bit RSA in security.
+- **Trade-off**: Complex math but computationally efficient once optimized.
+
+---
+
+### **Elliptic Curve Definition**
+
+- **Weierstrass Equation**:  
+  $$y^2 = x^3 + ax + b \quad \text{(mod } p\text{)}$$
+  - Discriminant: $-16(4a^3 + 27b^2) \neq 0$.
+- **Graph**:
+
+---
+
+### **Elliptic Curve Arithmetic**
+
+#### **Geometric Interpretation**
+
+1. **Point Addition (P + Q)**:
+   - Draw a line through $P$ and $Q$; third intersection is $-(P+Q)$.
+2. **Point Doubling (2P)**:
+   - Tangent at $P$; second intersection is $-2P$.
+3. **Identity Element**: Point at infinity ($\mathcal{O}$).
+
+#### **Algebraic Rules (mod $p$)**
+
+- **Slope $m$**:
+  - $P \neq Q$: $m = \frac{y_Q - y_P}{x_Q - x_P} \mod p$.
+  - $P = Q$: $m = \frac{3x_P^2 + a}{2y_P} \mod p$.
+- **Resulting Point $R = (x_R, y_R)$**:
+  $$
+  x_R = m^2 - x_P - x_Q \mod p, \quad y_R = m(x_P - x_R) - y_P \mod p.
+  $$
+
+---
+
+### **Example: ECC Point Addition**
+
+- Curve: $y^2 = x^3 + 2x + 3 \mod 97$.
+- Let $P = (3, 6)$, $Q = (80, 87)$.
+  1. Compute slope $m = \frac{87 - 6}{80 - 3} = \frac{81}{77} \mod 97$.
+     - $77^{-1} \mod 97 = 37$ → $m = 81 \times 37 \mod 97 = 69$.
+  2. Compute $x_R = 69^2 - 3 - 80 \mod 97 = 34$.
+  3. Compute $y_R = 69(3 - 34) - 6 \mod 97 = 62$.
+  4. Result: $P + Q = (34, 62)$.
+
+---
+
+### **Elliptic Curve Discrete Logarithm Problem (ECDLP)**
+
+- **Definition**: Given points $P$ and $Q = kP$, find $k$.
+- **Security**: Exponential complexity (best attack: Pollard’s Rho, $\mathcal{O}(\sqrt{n})$).
+- **Key Sizes**:  
+  | Security (bits) | ECC Key Size | RSA/DH Key Size |  
+  |------------------|--------------|-----------------|  
+  | 128 | 256 | 3072 |  
+  | 256 | 512 | 15360 |
+
+---
+
+### **Advantages of ECC**
+
+1. **Smaller Keys/Ciphertexts**: Ideal for IoT, mobile devices.
+2. **Faster Computations**: Less memory and bandwidth.
+3. **Quantum Resistance**: Better than RSA/DH (but still vulnerable to Shor’s algorithm).
+
+---
+
+### **Modern Developments**
+
+1. **EdDSA (Edwards-curve DSA)**: Faster with deterministic nonces (e.g., Ed25519).
+2. **Post-Quantum ECC**: Research into isogeny-based crypto (e.g., SIKE).
+3. **Adoption**: Used in TLS 1.3, Bitcoin (secp256k1), and WhatsApp.
+
+---
+
+### **MITM Attacks in ECC**
+
+- Same vulnerability as DH.
+- **Prevention**: Combine with digital signatures (e.g., ECDSA).
+
+---
+
+## **Summary**
+
+- **Diffie-Hellman**: Relies on DLP hardness; vulnerable to MITM without authentication.
+- **ECC**: Uses ECDLP for smaller keys; geometric/arithmetic rules define operations.
+- **Future**: Post-quantum algorithms will augment (not replace) ECC.
