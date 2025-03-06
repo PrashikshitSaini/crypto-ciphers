@@ -147,7 +147,10 @@
   - _Bob_ sends $m = 100$: $c = 100^3 \mod n = 156$.
 - **Decryption**: $m = c^d \mod n = 156^{147} \mod n = 100$.
 - **Attack**:
+
   - _Trudy_ tries to factor $n = 253$ → $p = 11$, $q = 23$, but fails for large $n$ (e.g., 2048 bits).
+
+  **Video for more understanding:** [Link](https://www.youtube.com/watch?v=JD72Ry60eP4&ab_channel=Computerphile)
 
 ---
 
