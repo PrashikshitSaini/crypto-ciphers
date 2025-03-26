@@ -331,10 +331,189 @@ RSA's security relies on the **factoring problem**: factoring a large composite 
 
 ---
 
-### **Summary**
+### **6. Hash Functions: Qualities of a Good Hash Function**
 
-- **Factoring Problem**: RSA security hinges on the difficulty of factoring $n = pq$.
-- **Modular Exponentiation**: Encryption ($m^e \mod n$) and decryption ($c^d \mod n$) use large exponents.
-- **Repeated Squaring**: Efficiently computes $m^e \mod n$ in $\mathcal{O}(\log e)$ steps.
+A hash function takes an input (message) of arbitrary length and produces a fixed-size output (hash/digest). A good hash function must satisfy these **five properties**:
 
-This mathematical foundation ensures RSA remains secure against classical attacks, though quantum computing poses a future risk.
+---
+
+#### **1. Preimage Resistance**
+
+- **Definition**: Given a hash value \( H \), it should be computationally infeasible to find any input \( m \) such that \( H(m) = H \).
+- **Example**:
+  - If \( H(\text{"password123"}) = \text{abcd...} \), even if you know \( \text{abcd...} \), you can’t reverse-engineer the original input "password123".
+- **Math**:
+  - Hash functions are **one-way** due to non-linear operations (e.g., modular reductions, bitwise XOR).
+
+---
+
+#### **2. Second Preimage Resistance**
+
+- **Definition**: Given an input \( m \), it’s hard to find another input \( m' \neq m \) such that \( H(m) = H(m') \).
+- **Example**:
+  - If \( H(\text{"Hello"}) = \text{xyz} \), you can’t find a different message "H3llo" that also hashes to \( \text{xyz} \).
+
+---
+
+#### **3. Collision Resistance**
+
+- **Definition**: It’s hard to find any two distinct inputs \( m \) and \( m' \) where \( H(m) = H(m') \).
+- **Example**:
+  - Finding two different PDF files with the same SHA-256 hash is nearly impossible.
+
+---
+
+#### **4. Deterministic**
+
+- The same input always produces the same hash.
+- **Example**:
+  - \( H(\text{"Alice"}) = \text{abc} \) today, and \( H(\text{"Alice"}) = \text{abc} \) tomorrow.
+
+---
+
+#### **5. Avalanche Effect**
+
+- **Definition**: A small change in the input (e.g., flipping one bit) should drastically change the output (~50% of bits flipped).
+- **Example**:
+  - \( H(\text{"cat"}) = \text{1A3F...} \)
+  - \( H(\text{"Cat"}) = \text{9B0E...} \) (capital "C" changes all bits).
+
+---
+
+### **7. The Birthday Problem**
+
+**Question**: How many people are needed in a room for a 50% chance that two share a birthday?  
+**Answer**: 23 people.
+
+---
+
+#### **Math Behind the Birthday Problem**
+
+- Let \( P(n) \) = probability of **no collision** among \( k \) people.  
+  \[
+  P(n) = \frac{365}{365} \times \frac{364}{365} \times \cdots \times \frac{365 - k + 1}{365}
+  \]
+- Probability of **at least one collision**:  
+  \[
+  1 - P(n) \approx 1 - e^{-k^2 / (2 \times 365)}
+  \]
+- Solving for \( 1 - P(n) = 0.5 \):  
+  \[
+  k \approx \sqrt{2 \times 365 \times \ln 2} \approx 23
+  \]
+
+---
+
+#### **Implications for Hash Functions**
+
+- For a hash with \( N \)-bit output (\( 2^N \) possible hashes), collisions become likely after \( \sqrt{2^N} = 2^{N/2} \) trials.
+- **Example**:
+  - A 128-bit hash (e.g., MD5) has \( 2^{128} \) possible hashes. Collisions are expected after \( 2^{64} \) hashes.
+  - This is why MD5 is broken (collisions found in \( 2^{24} \) steps).
+
+---
+
+### **8. Tiger Hash**
+
+#### **Overview**
+
+- Designed in 1995 as a fast, secure 192-bit hash for 64-bit CPUs.
+- **Key Features**:
+  - 512-bit input blocks.
+  - 192-bit output (3×64 bits for 64-bit CPU efficiency).
+  - 24 rounds with 4 S-boxes.
+
+---
+
+#### **Structure of Tiger Hash**
+
+1. **Padding**:
+
+   - Input is padded to a multiple of 512 bits.
+   - Example: A 1000-bit message is padded with 1, followed by 407 zeros, and a 64-bit length field.
+
+2. **Processing Blocks**:
+
+   - Split padded message into 512-bit blocks.
+   - Each block undergoes **24 rounds** of mixing.
+
+3. **Avalanche Effect in Action**:
+   - Each round uses non-linear S-boxes, modular additions, and XORs to ensure small changes propagate.
+
+---
+
+#### **Key Schedule Algorithm**
+
+- **Purpose**: Expand the 512-bit block into 192 bits for each round.
+- **Steps**:
+  1. Split the 512-bit block into eight 64-bit words \( w_0, w_1, ..., w_7 \).
+  2. Compute new words using XOR, addition, and S-boxes:  
+     \[
+     w*j = w*{j-1} \oplus (w*{j-2} + w*{j-3} + \text{S-box}(w\_{j-7}))
+     \]
+- **Example**:
+  - Let \( w_0 = 0x1234 \), \( w_1 = 0x5678 \), ..., \( w_7 = 0xABCD \).
+  - \( w_8 = w_7 \oplus (w_6 + w_5 + \text{S-box}(w_1)) \).
+
+---
+
+#### **S-Boxes**
+
+- Tiger uses 4 S-boxes, each mapping 8 bits → 64 bits.
+- **Role**: Introduce non-linearity to prevent reverse-engineering.
+
+---
+
+### **9. HMAC (Hashed Message Authentication Code)**
+
+#### **Problem**
+
+If Trudy alters both the message \( m \) and its hash \( H(m) \), Bob can’t detect tampering.
+
+---
+
+#### **Solution: HMAC**
+
+- Uses a **secret key \( K \)** to "lock" the hash.
+- **Steps**:
+  1. **Inner Hash**: Compute \( H(\text{key} \oplus \text{ipad} \parallel \text{message}) \).
+  2. **Outer Hash**: Compute \( H(\text{key} \oplus \text{opad} \parallel \text{inner hash}) \).
+
+---
+
+#### **HMAC Formula**
+
+\[
+\text{HMAC}(K, m) = H\left( (K \oplus \text{opad}) \parallel H\left( (K \oplus \text{ipad}) \parallel m \right) \right)
+\]
+
+- **Constants**:
+  - \( \text{ipad} = 0x36 \) (repeated), \( \text{opad} = 0x5C \) (repeated).
+
+---
+
+#### **Example**
+
+- **Key \( K \)**: "secret" (padded to block size).
+- **Message \( m \)**: "Hello".
+- **HMAC-SHA256 Computation**:
+  1. Inner hash: \( \text{SHA256}(K \oplus \text{ipad} \parallel \text{"Hello"}) \).
+  2. Outer hash: \( \text{SHA256}(K \oplus \text{opad} \parallel \text{Inner hash}) \).
+
+---
+
+### **Math Topics Needed to Master This**
+
+1. **Probability**:
+   - Birthday problem, collision probabilities.
+2. **Modular Arithmetic**:
+   - Used in hash functions (e.g., SHA-256, Tiger).
+3. **Combinatorics**:
+   - Counting hash collisions.
+4. **Boolean Algebra**:
+   - Bitwise operations (XOR, AND, OR) in hash functions.
+5. **Information Theory**:
+   - Entropy, avalanche effect.
+6. **Cryptographic Protocols**:
+   - HMAC structure, key scheduling.
+
